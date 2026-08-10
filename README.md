@@ -36,4 +36,19 @@ Metrics (latency, queue depth, batch size, error rate) get collected from the qu
 - **Metrics:** Prometheus + Grafana (swap for Cloud Monitoring if you deploy to GCP)
 - **Optional deploy:** GKE Autopilot or Cloud Run on GCP trial credits
 
+## Additional info
+
+### Testing new capabilities
+
+The throwaway_model_script.py is just that, a throwaway script meant to experiment with some specs (models, datasets, beams numbers, etc.).
+To play around with it, make sure to have uv installed and run the following scripts:
+
+**_Only on the first time_**, to create virtual environment, run:
+`uv sync`
+
+Then, to run the actual command run:
+`uv run throwaway_model_script.py`
+
+
+
 
