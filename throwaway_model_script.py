@@ -1,21 +1,42 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import time
+from datasets import load_dataset
 
-model_name = "sshleifer/distilbart-cnn-12-6"  # You can change this to any other model you want to use
 
+# You can change this to any other model you want to use
+# For news summarization, I recommend using "sshleifer/distilbart-cnn-12-6" (CPU) or "facebook/bart-large-cnn"
+# For research paper/ticket summarization, use something else
+model_name = "sshleifer/distilbart-cnn-12-6"
+
+# Pulling 20 samples from the CNN/DailyMail dataset for testing
+articles = load_dataset("abisee/cnn_dailymail", "3.0.0", split="test[:20]")
+
+# number of beams to test (how deeply to search for the best summary)
+num_beams_arr = [2, 4] # Can always add more
+
+# Timing the model loading time
 t0 = time.perf_counter()
-# Initialize the summarization pipeline with the specified model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 t1 = time.perf_counter()
 print(f"Model loaded in: {t1 - t0:.2f} seconds")
 
-article = """(CNN) -- An American woman died aboard a cruise ship that docked at Rio de Janeiro on Tuesday, the same ship on which 86 passengers previously fell ill, according to the state-run Brazilian news agency, Agencia Brasil. The American tourist died aboard the MS Veendam, owned by cruise operator Holland America. Federal Police told Agencia Brasil that forensic doctors were investigating her death. The ship's doctors told police that the woman was elderly and suffered from diabetes and hypertension, according the agency. The other passengers came down with diarrhea prior to her death during an earlier part of the trip, the ship's doctors said. The Veendam left New York 36 days ago for a South America tour."""
 
-input = tokenizer(article, return_tensors="pt", truncation=True)
-model.generate(**input, max_length=130, min_length=30)  # Warm-up run to load the model into memory
-t2 = time.perf_counter()
-summary = model.generate(**input, max_length=130, min_length=30)
-t3 = time.perf_counter()
-print(f"Inference time: {t3 - t2:.2f} seconds")
-print("Summary:", tokenizer.decode(summary[0], skip_special_tokens=True))
+for num_beams in num_beams_arr:
+    print(f"\n\nRunning inference with num_beams={num_beams}...\n")
+    # Warmup call to load the model into memory
+    # Has to be called in this loop, because the model has a new cold start due to change in num_beams
+    article = articles[0]["article"]
+    input = tokenizer(article, return_tensors="pt", truncation=True)
+    model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
+
+    # Loop through the articles and summarize each one (with timing)
+    for row in articles:
+        text = row["article"]
+        input = tokenizer(text, return_tensors="pt", truncation=True)
+        t2 = time.perf_counter()
+        summary = model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
+        t3 = time.perf_counter()
+        print(f"Inference time: {t3 - t2:.2f} seconds")
+        print("Summary:", tokenizer.decode(summary[0], skip_special_tokens=True))
+        print("Highlights (human):", row["highlights"])
