@@ -15,7 +15,9 @@ def load_model():
     model.generate(**input, max_length=130, min_length=30, num_beams=settings.num_beams)
 
 # Summarizes the message, and times the inference time. Returns a tuple of (summary, inference_time)
-def summarize(text: str, num_beams: int = settings.num_beams) -> tuple[str, float]:
+def summarize(text: str, num_beams: int | None = None) -> tuple[str, float]:
+    if num_beams is None:
+        num_beams = settings.num_beams
     input = tokenizer(text, return_tensors="pt", truncation=True)
     t2 = time.perf_counter()
     summary = model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
