@@ -49,6 +49,11 @@ To play around with it, make sure to have uv installed and run the following scr
 Then, to run the actual command run:
 `uv run throwaway_model_script.py`
 
+### Running worker locally
+
+Get into the `server/worker` directory and execute: `uv run python -m app.main` 
+
+
 
 
 
