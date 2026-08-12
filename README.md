@@ -34,7 +34,7 @@ Metrics (latency, queue depth, batch size, error rate) get collected from the qu
 - **Containers:** Docker + Docker Compose (simulates multiple replicas locally)
 - **Load testing:** Locust, with a scripted diurnal traffic shape
 - **Metrics:** Prometheus + Grafana (swap for Cloud Monitoring if you deploy to GCP)
-- **Optional deploy:** GKE Autopilot or Cloud Run on GCP trial credits
+- **Optional deploy:** Any cloud provider
 
 ## Additional info
 
