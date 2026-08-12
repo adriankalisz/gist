@@ -9,6 +9,7 @@ dependencies = [
     "transformers>=4.45",
     "torch>=2.4",
     "datasets>=3.0",
+    "pydantic-settings>=2.15.0",
 ]
 
 [tool.uv]

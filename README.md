@@ -34,7 +34,7 @@ Metrics (latency, queue depth, batch size, error rate) get collected from the qu
 - **Containers:** Docker + Docker Compose (simulates multiple replicas locally)
 - **Load testing:** Locust, with a scripted diurnal traffic shape
 - **Metrics:** Prometheus + Grafana (swap for Cloud Monitoring if you deploy to GCP)
-- **Optional deploy:** GKE Autopilot or Cloud Run on GCP trial credits
+- **Optional deploy:** Any cloud provider
 
 ## Additional info
 
@@ -48,6 +48,11 @@ To play around with it, make sure to have uv installed and run the following scr
 
 Then, to run the actual command run:
 `uv run throwaway_model_script.py`
+
+### Running worker locally
+
+Get into the `server/worker` directory and execute: `uv run python -m app.main` 
+
 
 
 
