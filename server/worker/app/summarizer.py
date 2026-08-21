@@ -5,6 +5,9 @@ from app.config import settings
 tokenizer = None
 model = None
 
+def is_ready() -> bool:
+    return tokenizer is not None and model is not None
+
 # Loads the model and tokenizer into memory
 def load_model():
     global tokenizer, model
