@@ -6,3 +6,7 @@ class SummarizeRequest(BaseModel):
 class SummarizeResponse(BaseModel):
     summary: str
     inference_time: float
+
+class HealthResponse(BaseModel):
+    status: str
+    message: str
