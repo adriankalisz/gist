@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gist — Document Summarizer</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e2e4e9;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --error: #dc2626;
+    --error-bg: #fef2f2;
+    --success-bg: #f0f9ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+  .container { width: 100%; max-width: 720px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); margin: 0 0 28px; font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .char-count { font-size: 0.8rem; color: var(--muted); }
+  .char-count.over { color: var(--error); font-weight: 600; }
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: var(--accent-hover); }
+  button:disabled { background: #a5b4d6; cursor: not-allowed; }
+  .result-card { display: none; }
+  .result-card.visible { display: block; }
+  .result-card.error { background: var(--error-bg); border-color: #fecaca; }
+  .result-card.success { background: var(--success-bg); }
+  .result-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .summary-text { font-size: 1rem; line-height: 1.6; margin: 0 0 14px; white-space: pre-wrap; }
+  .timing { font-size: 0.85rem; color: var(--muted); }
+  .error-text { color: var(--error); font-size: 0.9rem; margin: 0; }
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Gist</h1>
+  <p class="subtitle">Paste a document below and get a summary from the worker.</p>
+
+  <div class="card">
+    <textarea id="text-input" placeholder="Paste a news article, ticket, or report here..." maxlength="10000"></textarea>
+    <div class="meta-row">
+      <span class="char-count" id="char-count">0 / 10000</span>
+      <button id="submit-btn">Summarize</button>
+    </div>
+  </div>
+
+  <div class="card result-card" id="result-card">
+    <div class="result-label" id="result-label">Summary</div>
+    <p class="summary-text" id="summary-text"></p>
+    <p class="timing" id="timing-text"></p>
+    <p class="error-text" id="error-text" style="display:none;"></p>
+  </div>
+</div>
+
+<script>
+  // Point this at the gateway once it exists — talking to the worker directly for now.
+  const API_BASE = "http://localhost:8000";
+
+  const textInput = document.getElementById("text-input");
+  const charCount = document.getElementById("char-count");
+  const submitBtn = document.getElementById("submit-btn");
+  const resultCard = document.getElementById("result-card");
+  const resultLabel = document.getElementById("result-label");
+  const summaryText = document.getElementById("summary-text");
+  const timingText = document.getElementById("timing-text");
+  const errorText = document.getElementById("error-text");
+
+  textInput.addEventListener("input", () => {
+    const len = textInput.value.length;
+    charCount.textContent = `${len} / 10000`;
+    charCount.classList.toggle("over", len > 10000);
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    const text = textInput.value.trim();
+    if (!text) return;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span>Summarizing...';
+    resultCard.className = "card result-card visible";
+    resultLabel.textContent = "Summary";
+    summaryText.style.display = "block";
+    timingText.style.display = "block";
+    errorText.style.display = "none";
+    summaryText.textContent = "";
+    timingText.textContent = "";
+
+    try {
+      const res = await fetch(`${API_BASE}/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail ? JSON.stringify(data.detail) : `Request failed (${res.status})`);
+      }
+
+      resultCard.classList.add("success");
+      summaryText.textContent = data.summary;
+      timingText.textContent = `Summarized in ${data.inference_time.toFixed(2)}s`;
+    } catch (err) {
+      resultCard.classList.remove("success");
+      resultCard.classList.add("error");
+      resultLabel.textContent = "Error";
+      summaryText.style.display = "none";
+      timingText.style.display = "none";
+      errorText.style.display = "block";
+      errorText.textContent = err.message || "Something went wrong reaching the worker.";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Summarize";
+    }
+  });
+</script>
+</body>
+</html>
