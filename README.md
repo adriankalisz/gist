@@ -38,20 +38,25 @@ Metrics (latency, queue depth, batch size, error rate) get collected from the qu
 
 ## Additional info
 
+### Running the app locally
+
+Since the app is fully containerized, user needs Docker installed. The steps are:
+
+1. Get into the `server/worker` (`cd server/worker`).
+2. If this is the **first time** launching the app, run `docker build -t gist-worker .` (builds the Docker image)
+3. Run: `docker run -p 8000:8000 gist-worker` (mapps the docker's port 8000 to user's port 8000 and runs the image)
+
+ 
+
 ### Testing new capabilities
 
-The throwaway_model_script.py is just that, a throwaway script meant to experiment with some specs (models, datasets, beams numbers, etc.).
-To play around with it, make sure to have uv installed and run the following scripts:
+Inside `quick_tests` directory, are the experiments measuring the quality and latencies for response and different components of the app. In order to run them, launch the app and run the following commands
 
 **_Only on the first time_**, to create virtual environment, run:
 `uv sync`
 
 Then, to run the actual command run:
-`uv run throwaway_model_script.py`
-
-### Running worker locally
-
-Get into the `server/worker` directory and execute: `uv run python -m app.main` 
+`uv run quick/tests[SCRIPT_NAME].py`
 
 
 
