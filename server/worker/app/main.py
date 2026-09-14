@@ -1,14 +1,23 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import summarize, health
 from app.summarizer import load_model
+from app.batcher import batch_summarize
 import uvicorn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     load_model()
+    # Start the batch_summarize task in the background - it will end when the app shuts down
+    task = asyncio.create_task(batch_summarize())
     yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 app = FastAPI(title="gist-worker", lifespan=lifespan)
 app.add_middleware(
