@@ -10,6 +10,7 @@ dependencies = [
     "torch>=2.4",
     "datasets>=3.0",
     "pydantic-settings>=2.15.0",
+    "requests>=2.31",
 ]
 
 [tool.uv]

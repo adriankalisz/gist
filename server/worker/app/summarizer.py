@@ -17,12 +17,14 @@ def load_model():
     input = tokenizer("""This is just a call to load the model""", return_tensors="pt", truncation=True)
     model.generate(**input, max_length=130, min_length=30, num_beams=settings.num_beams)
 
-# Summarizes the message, and times the inference time. Returns a tuple of (summary, inference_time)
-def summarize(text: str, num_beams: int | None = None) -> tuple[str, float]:
+
+# Summarizes the message, and times the inference time. Returns a tuple of (summaries (List[str]), inference_time)
+def summarize(articles: list[str], num_beams: int | None = None) -> tuple[list[str], float]:
     if num_beams is None:
         num_beams = settings.num_beams
-    input = tokenizer(text, return_tensors="pt", truncation=True)
+    input = tokenizer(articles, return_tensors="pt", truncation=True, padding=True)
     t2 = time.perf_counter()
-    summary = model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
+    summaries = model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
     t3 = time.perf_counter()
-    return tokenizer.decode(summary[0], skip_special_tokens=True), t3 - t2
+    return [tokenizer.decode(summary, skip_special_tokens=True) for summary in summaries], t3 - t2
+    
