@@ -19,12 +19,10 @@ def load_model():
 
 
 # Summarizes the message, and times the inference time. Returns a tuple of (summaries (List[str]), inference_time)
-def summarize(articles: list[str], num_beams: int | None = None) -> tuple[list[str], float]:
-    if num_beams is None:
-        num_beams = settings.num_beams
+def summarize(articles: list[str]) -> tuple[list[str], float]:
     input = tokenizer(articles, return_tensors="pt", truncation=True, padding=True)
     t2 = time.perf_counter()
-    summaries = model.generate(**input, max_length=130, min_length=30, num_beams=num_beams)
+    summaries = model.generate(**input, max_length=130, min_length=30, num_beams=settings.num_beams)
     t3 = time.perf_counter()
     return [tokenizer.decode(summary, skip_special_tokens=True) for summary in summaries], t3 - t2
     
