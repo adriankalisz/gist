@@ -46,6 +46,8 @@ Since the app is fully containerized, user needs Docker installed. The steps are
 2. If this is the **first time** launching the app, run `docker build -t gist-worker .` (builds the Docker image)
 3. Run: `docker run -p 8000:8000 gist-worker` (mapps the docker's port 8000 to user's port 8000 and runs the image)
 
+The image uses CPU torch by default. To run on an NVIDIA GPU (CUDA 12.6), build with `docker build --build-arg TORCH=gpu -t gist-worker .` and run with `docker run --gpus all -p 8000:8000 gist-worker`. The worker picks the GPU automatically when one is available; set `DEVICE=cpu` or `DEVICE=cuda` to force one.
+
  
 
 ### Testing new capabilities
@@ -53,7 +55,7 @@ Since the app is fully containerized, user needs Docker installed. The steps are
 Inside `quick_tests` directory, are the experiments measuring the quality and latencies for response and different components of the app. In order to run them, launch the app and run the following commands
 
 **_Only on the first time_**, to create virtual environment, run:
-`uv sync`
+`uv sync` (installs CPU torch; on an NVIDIA GPU machine use `uv sync --no-default-groups --group gpu` instead)
 
 Then, to run the actual command run:
 `uv run quick/tests[SCRIPT_NAME].py`

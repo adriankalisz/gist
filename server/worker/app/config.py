@@ -6,5 +6,6 @@ class Settings(BaseSettings):
     num_beams : int = 2  # Default number of beams for summarization
     summarization_batch_size : int = 8  # Default batch size for summarization
     batch_wait_ms : int = 50  # Max time to keep collecting a batch after the first item arrives, in ms
+    device : str = "auto"  # "auto" picks cuda when available, otherwise cpu; or set explicitly, e.g. "cpu", "cuda"
 
 settings = Settings()
