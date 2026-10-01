@@ -58,7 +58,15 @@ Inside `quick_tests` directory, are the experiments measuring the quality and la
 `uv sync` (installs CPU torch; on an NVIDIA GPU machine use `uv sync --no-default-groups --group gpu` instead)
 
 Then, to run the actual command run:
-`uv run quick/tests[SCRIPT_NAME].py`
+`uv run quick_tests/[SCRIPT_NAME].py`
+
+Each script takes flags (see `--help`) and writes a CSV to `quick_tests/results/`:
+- `beams_experiment.py`: model only. Latency and ROUGE for each beam count.
+- `batch_size_sweep.py`: model only. Throughput for each batch size.
+- `ten_requests.py`: sends Documents to a running worker one at a time.
+- `concurrency_sweep.py`: sends Documents to a running worker from 1, 8, 32 and 128 concurrent clients. Records throughput and p50/p95 latency.
+
+`notebooks/colab_batching.ipynb` runs all of these on a free Colab T4 GPU, comparing the no-queue baseline with the queued worker at several batch sizes.
 
 
 

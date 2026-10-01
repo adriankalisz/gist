@@ -10,6 +10,7 @@ dependencies = [
     "datasets>=3.0",
     "pydantic-settings>=2.15.0",
     "requests>=2.31",
+    "rouge-score>=0.1.2",
 ]
 
 # torch comes from one of two conflicting groups: "cpu" (default) or "gpu" (CUDA 12.6).
