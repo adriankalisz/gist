@@ -31,7 +31,7 @@ def load_model():
 def summarize(articles: list[str]) -> tuple[list[str], float]:
     input = tokenizer(articles, return_tensors="pt", truncation=True, padding=True).to(device)
     t2 = time.perf_counter()
-    summaries = model.generate(**input, max_length=130, min_length=30, num_beams=settings.num_beams)
+    summaries = model.generate(**input, max_length=142, min_length=56, num_beams=settings.num_beams)
     t3 = time.perf_counter()
     return [tokenizer.decode(summary, skip_special_tokens=True) for summary in summaries], t3 - t2
 
