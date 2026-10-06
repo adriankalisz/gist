@@ -24,7 +24,7 @@ def load_model():
     model = AutoModelForSeq2SeqLM.from_pretrained(settings.model_name).to(device)
     # Warmup call to load the model into memory
     input = tokenizer("""This is just a call to load the model""", return_tensors="pt", truncation=True).to(device)
-    model.generate(**input, max_length=130, min_length=30, num_beams=settings.num_beams)
+    model.generate(**input, max_length=142, min_length=56, num_beams=settings.num_beams)
 
 
 # Summarizes the message, and times the inference time. Returns a tuple of (summaries (List[str]), inference_time)
