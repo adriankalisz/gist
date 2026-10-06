@@ -20,11 +20,16 @@ RESULTS_DIR = Path(__file__).parent / "results"
 
 # Returns the first num_docs CNN/DailyMail test articles the worker accepts, as (article, highlights) pairs.
 # Every script uses this, so all experiments see the same Documents in the same order.
-def load_documents(num_docs: int) -> list[tuple[str, str]]:
+# max_chars=None skips the worker's limit and returns the first num_docs test articles of any length,
+# for comparing ROUGE with published scores (the worker would reject some of these).
+def load_documents(num_docs: int, max_chars: int | None = MAX_DOCUMENT_CHARS) -> list[tuple[str, str]]:
+    if max_chars is None:
+        dataset = load_dataset("abisee/cnn_dailymail", "3.0.0", split=f"test[:{num_docs}]")
+        return [(row["article"], row["highlights"]) for row in dataset]
     dataset = load_dataset("abisee/cnn_dailymail", "3.0.0", split="test[:2000]")
-    documents = [(row["article"], row["highlights"]) for row in dataset if len(row["article"]) <= MAX_DOCUMENT_CHARS]
+    documents = [(row["article"], row["highlights"]) for row in dataset if len(row["article"]) <= max_chars]
     if len(documents) < num_docs:
-        raise ValueError(f"only {len(documents)} test articles fit within {MAX_DOCUMENT_CHARS} characters")
+        raise ValueError(f"only {len(documents)} test articles fit within {max_chars} characters")
     return documents[:num_docs]
 
 
