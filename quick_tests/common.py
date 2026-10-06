@@ -10,7 +10,7 @@ from datasets import load_dataset
 # Same model and generation settings as server/worker/app/summarizer.py, so model-only
 # numbers are comparable with the worker's
 MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
-GENERATE_KWARGS = {"max_length": 130, "min_length": 30}
+GENERATE_KWARGS = {"max_length": 142, "min_length": 56}
 
 # The worker rejects texts longer than this (SummarizeRequest.text max_length)
 MAX_DOCUMENT_CHARS = 10000
