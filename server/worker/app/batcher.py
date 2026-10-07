@@ -6,11 +6,9 @@ from app.summarizer import summarize
 request_queue: asyncio.Queue = asyncio.Queue()
 
 
-async def enqueue_request(article, num_beams: int | None = None):
-    if num_beams is None:
-        num_beams = settings.num_beams
+async def enqueue_request(article):
     future = asyncio.get_running_loop().create_future()
-    await request_queue.put((article, num_beams, future))
+    await request_queue.put((article, future))
     return await future
 
 
@@ -19,12 +17,11 @@ async def batch_summarize():
     while True:
         articles: list[str] = []
         futures: list[asyncio.Future] = []
-        num_beams = settings.num_beams
 
         try:
             # Block until the first item arrives - this is what defines a batch
             # and avoids busy-looping while the queue is idle.
-            article, num_beams, future = await request_queue.get()
+            article, future = await request_queue.get()
             articles.append(article)
             futures.append(future)
             deadline = loop.time() + settings.batch_wait_ms / 1000
@@ -36,7 +33,7 @@ async def batch_summarize():
                 if remaining <= 0:
                     break
                 try:
-                    article, _, future = await asyncio.wait_for(request_queue.get(), timeout=remaining)
+                    article, future = await asyncio.wait_for(request_queue.get(), timeout=remaining)
                 except asyncio.TimeoutError:
                     break
                 articles.append(article)
@@ -45,7 +42,7 @@ async def batch_summarize():
             try:
                 # Run the blocking model call off the event loop so new
                 # requests can still be accepted/enqueued while it runs.
-                summaries, inference_time = await asyncio.to_thread(summarize, articles, num_beams)
+                summaries, inference_time = await asyncio.to_thread(summarize, articles)
             except Exception as exc:
                 for f in futures:
                     if not f.done():
@@ -67,7 +64,7 @@ async def batch_summarize():
                 if not f.done():
                     f.set_exception(shutdown_exc)
             while not request_queue.empty():
-                _, _, f = request_queue.get_nowait()
+                _, f = request_queue.get_nowait()
                 if not f.done():
                     f.set_exception(shutdown_exc)
             raise

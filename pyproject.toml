@@ -7,19 +7,35 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "transformers>=4.45",
-    "torch>=2.4",
     "datasets>=3.0",
     "pydantic-settings>=2.15.0",
     "requests>=2.31",
+    "rouge-score>=0.1.2",
 ]
+
+# torch comes from one of two conflicting groups: "cpu" (default) or "gpu" (CUDA 12.6).
+# For GPU: uv sync --no-default-groups --group gpu
+[dependency-groups]
+cpu = ["torch==2.14.1"]
+gpu = ["torch==2.14.1"]
 
 [tool.uv]
 package = false
+default-groups = ["cpu"]
+conflicts = [[{ group = "cpu" }, { group = "gpu" }]]
 
 [tool.uv.sources]
-torch = [{ index = "pytorch-cpu" }]
+torch = [
+    { index = "pytorch-cpu", group = "cpu" },
+    { index = "pytorch-cu126", group = "gpu" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true

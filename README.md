@@ -46,6 +46,8 @@ Since the app is fully containerized, user needs Docker installed. The steps are
 2. If this is the **first time** launching the app, run `docker build -t gist-worker .` (builds the Docker image)
 3. Run: `docker run -p 8000:8000 gist-worker` (mapps the docker's port 8000 to user's port 8000 and runs the image)
 
+The image uses CPU torch by default. To run on an NVIDIA GPU (CUDA 12.6), build with `docker build --build-arg TORCH=gpu -t gist-worker .` and run with `docker run --gpus all -p 8000:8000 gist-worker`. The worker picks the GPU automatically when one is available; set `DEVICE=cpu` or `DEVICE=cuda` to force one.
+
  
 
 ### Testing new capabilities
@@ -53,10 +55,18 @@ Since the app is fully containerized, user needs Docker installed. The steps are
 Inside `quick_tests` directory, are the experiments measuring the quality and latencies for response and different components of the app. In order to run them, launch the app and run the following commands
 
 **_Only on the first time_**, to create virtual environment, run:
-`uv sync`
+`uv sync` (installs CPU torch; on an NVIDIA GPU machine use `uv sync --no-default-groups --group gpu` instead)
 
 Then, to run the actual command run:
-`uv run quick/tests[SCRIPT_NAME].py`
+`uv run quick_tests/[SCRIPT_NAME].py`
+
+Each script takes flags (see `--help`) and writes a CSV to `quick_tests/results/`:
+- `beams_experiment.py`: model only. Latency and ROUGE for each beam count.
+- `batch_size_sweep.py`: model only. Throughput for each batch size.
+- `ten_requests.py`: sends Documents to a running worker one at a time.
+- `concurrency_sweep.py`: sends Documents to a running worker from 1, 8, 32 and 128 concurrent clients. Records throughput and p50/p95 latency.
+
+`notebooks/colab_batching.ipynb` runs all of these on a free Colab T4 GPU, comparing the no-queue baseline with the queued worker at several batch sizes.
 
 
 
